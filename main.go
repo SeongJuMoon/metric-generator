@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -25,7 +26,29 @@ func init() {
 }
 
 func main() {
-	randGauge.Set(rand.Float64() * weight)
-	http.Handle("/metrics", promhttp.Handler())
+
+	randomGenerator := func() float64 {
+		rand.Seed(time.Hour.Milliseconds())
+		return rand.Float64() * weight
+	}
+
+	go func() {
+		count := 0
+		for {
+			val := randomGenerator()
+			count = count + 1
+			if count%10 == 0 {
+				randGauge.Add(val * 5)
+			} else {
+				randGauge.Sub(val / 2)
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+
+	http.Handle("/metrics", promhttp.HandlerFor(
+		prometheus.DefaultGatherer,
+		promhttp.HandlerOpts{EnableOpenMetrics: true},
+	))
 	http.ListenAndServe(":8080", nil)
 }
