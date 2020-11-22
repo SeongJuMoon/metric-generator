@@ -32,17 +32,24 @@ func main() {
 		return rand.Float64() * weight
 	}
 
+	gaugeRaceOnRuntime := func(count int) {
+		val := randomGenerator()
+		if count%10 == 0 {
+			randGauge.Add(val * 5)
+		} else {
+			randGauge.Sub(val / 2)
+		}
+		time.Sleep(time.Second)
+	}
+
 	go func() {
 		count := 0
 		for {
-			val := randomGenerator()
-			count = count + 1
-			if count%10 == 0 {
-				randGauge.Add(val * 5)
-			} else {
-				randGauge.Sub(val / 2)
+			if count > 100 {
+				count = 0
 			}
-			time.Sleep(time.Second)
+			gaugeRaceOnRuntime(count)
+			count = count + 1
 		}
 	}()
 
