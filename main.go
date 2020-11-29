@@ -10,9 +10,7 @@ import (
 )
 
 const (
-	randCoverage   = 65536
-	multiplyWeight = 3
-	divideWeight   = 2
+	randCoverage = 65536
 )
 
 var (
@@ -30,16 +28,14 @@ func init() {
 func main() {
 
 	randomGenerator := func() float64 {
-		rand.Seed(time.Hour.Milliseconds())
+		rand.Seed(time.Now().UnixNano())
 		return rand.Float64() * randCoverage
 	}
 
 	gaugeRaceOnRuntime := func(count int) {
-		val := randomGenerator()
 		if count%10 == 0 {
-			randGauge.Add(val * multiplyWeight)
-		} else {
-			randGauge.Sub(val / divideWeight)
+			val := randomGenerator()
+			randGauge.Set(val)
 		}
 		time.Sleep(time.Second)
 	}
